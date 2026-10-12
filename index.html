@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Build your All-22 football lineup from One Piece characters, or take on the 17–0 Challenge and Grand Line Draft.">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>One Piece All-22</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one-column app — mode tabs, control strip, a vertical turf field with parchment bounty-tag players, picker as a bottom sheet. Single committed look: night sea + turf + parchment. */
+:root{
+  --sea:#0d1b2a; --sea-2:#14273b; --sea-3:#1d3550;
+  --turf:#1f6b3a; --turf-2:#257a43; --chalk:rgba(255,255,255,.55);
+  --paper:#efe0bd; --paper-2:#e3cf9f; --ink:#2b1d0e; --ink-2:#6b5132;
+  --gold:#f0b429; --red:#d9483b; --good:#4cc27a; --ok:#e9c046; --bad:#e2694f;
+  --fg:#e8eef4; --muted:#93a7bb;
+  --f-display:"Pirata One","Old English Text MT",Georgia,serif;
+  --f-cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--sea);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+header h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2.2rem,7vw,3.4rem);line-height:1;margin:0;color:var(--paper);letter-spacing:.01em;text-wrap:balance}
+header h1 span{color:var(--gold)}
+header p{margin:.5rem 0 0;color:var(--muted);max-width:62ch}
+
+.modes{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap}
+.modes button{background:var(--sea-2);border:1px solid var(--sea-3);border-radius:999px;padding:.45rem .95rem;font-family:var(--f-cond);font-weight:700;font-size:1rem;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+.modes button[aria-pressed="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+
+.blurb{margin:12px 0 0;color:var(--muted);font-size:.95rem;max-width:66ch}
+
+.panel{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.group{display:flex;align-items:center;gap:6px}
+.lbl{font-family:var(--f-cond);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:.78rem;color:var(--muted)}
+.seg{display:inline-flex;background:var(--sea-2);border:1px solid var(--sea-3);border-radius:8px;padding:2px}
+.seg button{background:none;border:0;padding:.3rem .65rem;border-radius:6px;font-family:var(--f-cond);font-weight:700;font-size:.95rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--sea-3);color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:transparent;border:1px solid var(--sea-3);border-radius:6px;padding:.25rem .55rem;font-family:var(--f-cond);font-weight:600;font-size:.9rem;color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:rgba(240,180,41,.08)}
+.btn{background:var(--sea-2);border:1px solid var(--sea-3);border-radius:8px;padding:.45rem .8rem;font-family:var(--f-cond);font-weight:700;font-size:.98rem;letter-spacing:.02em}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.danger{color:var(--bad)}
+
+/* scoreboard */
+.board{display:flex;align-items:stretch;gap:0;background:var(--sea-2);border:1px solid var(--sea-3);border-radius:10px;overflow:hidden}
+.board > div{padding:.55rem .9rem;border-right:1px solid var(--sea-3);min-width:0}
+.board > div:last-child{border-right:0}
+.board .big{font-family:var(--f-cond);font-weight:800;font-size:1.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.board .grow{flex:1}
+.board small{display:block;font-family:var(--f-cond);text-transform:uppercase;letter-spacing:.08em;font-size:.72rem;color:var(--muted);font-weight:600}
+
+/* roll card */
+.roll{background:var(--paper);color:var(--ink);border-radius:10px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;box-shadow:0 6px 0 var(--paper-2)}
+.roll .round{font-family:var(--f-cond);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.8rem;color:var(--ink-2)}
+.roll .draw{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.roll .draw b{font-family:var(--f-display);font-weight:400;font-size:1.7rem;line-height:1}
+.roll .draw span{display:block;font-family:var(--f-cond);text-transform:uppercase;letter-spacing:.08em;font-size:.72rem;color:var(--ink-2);font-weight:700}
+.roll .acts{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.roll .btn{background:transparent;border-color:var(--ink-2);color:var(--ink)}
+.roll .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.roll .hint{flex-basis:100%;margin:0;font-size:.9rem;color:var(--ink-2)}
+
+/* field */
+.field{position:relative;margin-top:16px;border-radius:12px;overflow:hidden;
+  background:
+    repeating-linear-gradient(180deg,transparent 0 35px,var(--chalk) 35px 36px),
+    repeating-linear-gradient(180deg,var(--turf) 0 72px,var(--turf-2) 72px 144px);
+  border:3px solid #e9f0e6;box-shadow:0 0 0 6px var(--sea-2)}
+.field::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,0,.28));pointer-events:none}
+.los{position:absolute;left:0;right:0;height:3px;background:var(--gold);opacity:.9}
+.los::after{content:"LINE OF SCRIMMAGE";position:absolute;right:8px;top:-17px;font-family:var(--f-cond);font-weight:700;font-size:.66rem;letter-spacing:.12em;color:var(--gold)}
+.side-tag{position:absolute;left:8px;font-family:var(--f-display);font-size:1rem;color:rgba(255,255,255,.75);letter-spacing:.03em}
+
+.tag{position:absolute;width:15%;min-width:58px;max-width:110px;transform:translateX(-50%);
+  background:var(--paper);color:var(--ink);border-radius:4px;padding:3px 4px 4px;text-align:center;
+  box-shadow:0 2px 0 var(--paper-2),0 4px 10px rgba(0,0,0,.35);border:0;display:flex;flex-direction:column;align-items:stretch;gap:1px;touch-action:manipulation}
+.tag .pos{font-family:var(--f-cond);font-weight:800;font-size:.68rem;letter-spacing:.1em;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center;gap:2px}
+.tag .fit{font-variant-numeric:tabular-nums;border-radius:3px;padding:0 3px;color:#14140f;font-size:.7rem}
+.tag .nm{font-family:var(--f-cond);font-weight:700;font-size:.82rem;line-height:1.05;min-height:2.1em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.tag .leg{color:var(--red)}
+.tag.empty{background:rgba(239,224,189,.14);color:var(--paper);box-shadow:none;border:1.5px dashed rgba(239,224,189,.6)}
+.tag.empty .pos{color:var(--paper)}
+.tag.empty .nm{color:rgba(239,224,189,.7);font-weight:600}
+.tag.target{animation:pulse 1.1s ease-in-out infinite;border-color:var(--gold);background:rgba(240,180,41,.18)}
+.tag.dragover{outline:3px solid var(--gold)}
+.tag:hover:not(:disabled){filter:brightness(1.05)}
+.tag:disabled{cursor:default}
+@keyframes pulse{50%{background:rgba(240,180,41,.36)}}
+@media (prefers-reduced-motion:reduce){.tag.target{animation:none}}
+.tag .preview{font-family:var(--f-cond);font-weight:800;font-size:.95rem;color:var(--gold);line-height:2.1rem}
+.tag .av{margin:1px auto 2px}
+.tag.empty .hole{width:2.1rem;height:2.1rem;margin:1px auto 2px;border-radius:50%;border:1.5px dashed rgba(239,224,189,.5)}
+
+/* portraits: original faction badge, or the viewer's own uploaded photo */
+.av{--s:2.1rem;width:var(--s);height:var(--s);border-radius:50%;flex:none;position:relative;overflow:hidden;display:grid;place-items:center;
+  font-family:var(--f-display);font-size:calc(var(--s)*.46);line-height:1;color:#fff8e8;text-shadow:0 1px 0 rgba(0,0,0,.45);
+  box-shadow:inset 0 0 0 2px rgba(255,248,232,.35),0 1px 2px rgba(0,0,0,.35);background-color:var(--fc)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.leg{box-shadow:inset 0 0 0 2px var(--gold),0 0 0 1px var(--gold)}
+.av.fP{background-image:repeating-radial-gradient(circle at 28% 26%,rgba(255,255,255,.16) 0 2px,transparent 2px 6px)}
+.av.fZ{background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.18) 0 3px,transparent 3px 8px)}
+.av.fL{background-image:repeating-radial-gradient(ellipse 140% 60% at 50% 130%,rgba(255,255,255,.18) 0 3px,transparent 3px 8px)}
+.av.fN{background-image:linear-gradient(160deg,rgba(255,255,255,.18),rgba(0,0,0,.2))}
+.av.lg{--s:3rem}
+.av.md{--s:2.4rem}
+.f-SH{--fc:#b8382b}.f-MA{--fc:#2f5f93}.f-EM{--fc:#5d3b8e}.f-WL{--fc:#1d6a64}.f-SN{--fc:#b8641f}.f-RV{--fc:#3c6f34}.f-CP{--fc:#545c68}.f-WA{--fc:#9a2c58}
+.roll .av{box-shadow:0 2px 0 var(--paper-2),0 0 0 2px var(--ink)}
+.drawn{display:flex;gap:12px;align-items:center}
+
+.prow{display:grid;grid-template-columns:2.4rem 1fr auto;gap:10px;align-items:center;padding:.4rem .6rem;border-radius:8px}
+.prow:hover{background:var(--sea-3)}
+.prow .who{min-width:0}
+.prow .who b{font-family:var(--f-cond);font-weight:700;font-size:1.02rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .who span{color:var(--muted);font-size:.82rem}
+.prow .acts{display:flex;gap:6px}
+.prow .btn{padding:.3rem .6rem;font-size:.9rem}
+.sheet .extra{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sheet .extra p{margin:0;color:var(--muted);font-size:.85rem;flex:1;min-width:14rem}
+
+.under{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+.under .spacer{flex:1}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--paper);color:var(--ink);font-family:var(--f-cond);font-weight:700;padding:.5rem 1rem;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:60}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(5,12,20,.66);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--sea-2);border:1px solid var(--sea-3);border-bottom:0;width:100%;max-width:640px;max-height:min(82vh,720px);border-radius:16px 16px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:16px;border-bottom:1px solid var(--sea-3)}}
+.sheet header{padding:14px 16px 10px;border-bottom:1px solid var(--sea-3);display:flex;flex-direction:column;gap:10px}
+.sheet h2{font-family:var(--f-display);font-weight:400;font-size:1.7rem;margin:0;line-height:1;color:var(--paper)}
+.sheet .sub{margin:0;color:var(--muted);font-size:.88rem}
+.sheet .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.sheet input[type=search]{width:100%;background:var(--sea);border:1px solid var(--sea-3);border-radius:8px;padding:.5rem .7rem;color:var(--fg);font:inherit}
+.list{overflow-y:auto;padding:6px 8px 12px;display:flex;flex-direction:column;gap:2px;min-height:0}
+.pick{display:grid;grid-template-columns:2.4rem 2.4rem 1fr auto;gap:10px;align-items:center;background:transparent;border:0;border-radius:8px;padding:.5rem .6rem;text-align:left;width:100%}
+.pick:hover,.pick:focus-visible{background:var(--sea-3)}
+.pick .score{font-family:var(--f-cond);font-weight:800;font-size:1.15rem;text-align:center;border-radius:6px;padding:.1rem 0;color:#14140f;font-variant-numeric:tabular-nums}
+.pick .who{min-width:0}
+.pick .who b{font-family:var(--f-cond);font-weight:700;font-size:1.05rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick .who span{color:var(--muted);font-size:.82rem}
+.pick .meta{font-family:var(--f-cond);font-weight:600;font-size:.8rem;color:var(--muted);text-align:right}
+.pick .meta .onf{color:var(--gold)}
+.pick .stat{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.empty-list{color:var(--muted);padding:1rem;text-align:center}
+
+/* results */
+.results h2{font-family:var(--f-display);font-weight:400;font-size:2.2rem;margin:0;color:var(--paper);line-height:1}
+.results .rec{font-family:var(--f-cond);font-weight:800;font-size:3.4rem;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 16px;margin-top:6px}
+.game{display:grid;grid-template-columns:1.6rem 1fr auto auto;gap:8px;align-items:baseline;padding:.3rem 0;border-bottom:1px dashed var(--sea-3);font-family:var(--f-cond);font-size:.98rem}
+.game .wl{font-weight:800}
+.game .wl.w{color:var(--good)} .game .wl.l{color:var(--bad)}
+.game .op{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game .opp{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.85rem}
+.game .sc{font-variant-numeric:tabular-nums;font-weight:700}
+details{background:var(--sea-2);border:1px solid var(--sea-3);border-radius:10px;padding:.6rem .9rem}
+details summary{font-family:var(--f-cond);font-weight:700;cursor:pointer;letter-spacing:.03em}
+details p{margin:.5rem 0 0;color:var(--muted);font-size:.92rem;max-width:68ch}
+.grades{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px 16px;margin-top:8px}
+.grades div{display:flex;justify-content:space-between;gap:8px;font-family:var(--f-cond);font-size:.95rem;border-bottom:1px dotted var(--sea-3);padding:.15rem 0}
+.grades em{font-style:normal;color:var(--muted);width:2.2rem;flex:none}
+.grades b{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+footer{margin-top:36px;color:var(--muted);font-size:.82rem;max-width:66ch}
+footer p{margin:.3rem 0}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>One Piece <span>All-22</span></h1>
+    <p id="tagline">Draft a 22-player football lineup from the Grand Line. Tap a spot to swap someone in, or drag one tag onto another to switch them.</p>
+  </header>
+
+  <nav class="modes" aria-label="Mode">
+    <button type="button" id="m-build" data-mode="build" aria-pressed="true">Builder</button>
+    <button type="button" id="m-170" data-mode="c170" aria-pressed="false">17–0 Challenge</button>
+    <button type="button" id="m-draft" data-mode="draft" aria-pressed="false">Grand Line Draft</button>
+  </nav>
+  <p class="blurb" id="modeBlurb"></p>
+
+  <section class="panel" id="buildPanel">
+    <div class="row">
+      <div class="group"><span class="lbl">Defense</span>
+        <div class="seg" id="segDef"><button type="button" data-v="34">3-4</button><button type="button" data-v="43">4-3</button></div></div>
+      <div class="group"><span class="lbl">Offense</span>
+        <div class="seg" id="segOff"><button type="button" data-v="FB">Fullback</button><button type="button" data-v="SL">Slot</button></div></div>
+      <div class="group"><span class="lbl">Legends</span>
+        <div class="seg" id="segLeg"><button type="button" data-v="off">Off</button><button type="button" data-v="on">On</button></div></div>
+    </div>
+    <div class="row"><span class="lbl">Factions</span><div class="chips" id="facChips"></div></div>
+    <div class="board" id="buildBoard"></div>
+  </section>
+
+  <section class="panel" id="chalPanel" hidden>
+    <div class="board" id="chalBoard"></div>
+    <div class="roll" id="rollCard"></div>
+  </section>
+
+  <div class="field" id="field" aria-label="Lineup"></div>
+
+  <div class="under" id="under"></div>
+
+  <section class="panel results" id="results" hidden></section>
+
+  <footer>
+    <p>Each character is graded on how well they fit a football position from rough speed, strength, technique, smarts, toughness and size ratings. QB, pass rushers and corners count the most, and your four weakest spots drag the whole team down. Opponents range from 350 to 910.</p>
+    <p>Fan project inspired by the Pokémon All-22 Builder. Not affiliated with Eiichiro Oda, Shueisha or Toei Animation.</p>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <header>
+      <div class="top">
+        <div><h2 id="sheetTitle">Pick a character</h2><p class="sub" id="sheetSub"></p></div>
+        <button type="button" class="btn" id="sheetClose">Close</button>
+      </div>
+      <div class="extra" id="sheetExtra" hidden>
+        <button type="button" class="btn primary" id="bulkBtn">Upload many</button>
+        <p>Name each file after the character (luffy.jpg, nico-robin.png) and they match automatically. Photos stay in this browser only.</p>
+      </div>
+      <input type="search" id="q" placeholder="Search by name" autocomplete="off">
+    </header>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="fileOne" accept="image/*" hidden>
+<input type="file" id="fileMany" accept="image/*" multiple hidden>
+
+<script>
+/* ---------- data: name | faction | fruit | legend | spd str tec iq dur size (1–10) ---------- */
+const RAW = `
+Monkey D. Luffy|SH|Z|1|9 9 7 4 10 4
+Roronoa Zoro|SH|N|0|8 9 10 3 10 6
+Nami|SH|N|0|7 3 8 9 4 4
+Usopp|SH|N|0|6 3 10 7 4 5
+Sanji|SH|N|0|10 8 9 7 8 6
+Tony Tony Chopper|SH|Z|0|6 7 6 9 7 3
+Nico Robin|SH|P|0|5 5 9 10 5 6
+Franky|SH|N|0|5 9 8 8 9 8
+Brook|SH|P|0|9 5 9 6 8 9
+Jinbe|SH|N|0|7 10 8 8 10 9
+Monkey D. Garp|MA|N|1|7 10 8 6 10 8
+Sengoku|MA|Z|1|5 10 7 10 9 8
+Akainu|MA|L|1|7 10 8 7 10 8
+Kizaru|MA|L|1|10 8 9 7 8 8
+Aokiji|MA|L|1|7 9 9 8 9 9
+Fujitora|MA|P|1|5 10 9 9 9 8
+Ryokugyu|MA|L|1|6 9 8 6 9 8
+Smoker|MA|L|0|7 8 7 7 8 7
+Tashigi|MA|N|0|7 5 8 6 5 4
+Koby|MA|N|0|9 6 7 7 6 5
+Helmeppo|MA|N|0|6 4 6 4 4 5
+Momonga|MA|N|0|6 7 7 6 7 7
+Tsuru|MA|P|0|4 5 8 10 6 4
+Hina|MA|P|0|6 6 7 7 6 6
+Sentomaru|MA|N|0|4 9 6 7 10 8
+Kaido|EM|Z|1|6 10 8 5 10 10
+Big Mom|EM|P|1|5 10 6 4 10 10
+Shanks|EM|N|1|8 9 10 9 9 7
+Blackbeard|EM|L|1|5 9 6 9 9 9
+Whitebeard|EM|P|1|5 10 8 8 10 10
+Gol D. Roger|EM|N|1|9 10 10 8 10 8
+Silvers Rayleigh|EM|N|1|8 9 10 10 9 8
+Marco|EM|Z|0|9 8 8 8 9 7
+Portgas D. Ace|EM|L|0|8 8 8 6 7 6
+Charlotte Katakuri|EM|P|0|9 9 10 9 9 9
+King|EM|Z|0|8 9 8 8 10 10
+Queen|EM|Z|0|5 10 6 8 9 10
+Jack|EM|Z|0|5 10 5 4 10 10
+Benn Beckman|EM|N|0|7 8 9 10 8 7
+Yasopp|EM|N|0|7 5 10 7 6 6
+Lucky Roux|EM|N|0|7 8 6 6 9 9
+Jesus Burgess|EM|P|0|7 10 6 4 9 9
+Van Augur|EM|P|0|7 4 10 7 5 7
+Shiryu|EM|P|0|9 8 9 7 8 8
+Charlotte Cracker|EM|P|0|7 8 8 7 9 9
+Charlotte Smoothie|EM|P|0|7 8 8 7 8 10
+Charlotte Perospero|EM|P|0|5 5 7 8 6 9
+Ulti|EM|Z|0|8 8 6 4 9 4
+Page One|EM|Z|0|7 8 5 4 8 6
+Who's-Who|EM|Z|0|9 8 8 6 8 8
+Vista|EM|N|0|7 7 9 7 7 8
+Jozu|EM|P|0|5 10 6 6 10 10
+Dracule Mihawk|WL|N|1|8 9 10 8 9 7
+Boa Hancock|WL|P|0|8 8 8 7 8 7
+Donquixote Doflamingo|WL|P|0|8 8 9 9 8 10
+Crocodile|WL|L|0|6 8 8 10 8 8
+Bartholomew Kuma|WL|P|0|10 10 6 8 10 10
+Gecko Moria|WL|P|0|4 7 5 6 7 10
+Buggy|WL|P|0|5 3 6 6 6 5
+Edward Weevil|WL|N|0|6 10 6 3 9 10
+Trafalgar Law|SN|P|0|8 7 9 10 7 7
+Eustass Kid|SN|P|0|7 9 7 6 9 7
+Killer|SN|N|0|9 8 9 6 7 7
+Jewelry Bonney|SN|P|0|8 5 6 5 6 4
+Basil Hawkins|SN|P|0|5 6 7 9 8 7
+X Drake|SN|Z|0|7 9 7 8 9 8
+Scratchmen Apoo|SN|P|0|7 6 7 7 6 8
+Capone Bege|SN|P|0|4 7 7 9 9 5
+Urouge|SN|P|0|5 10 5 5 10 10
+Bartolomeo|SN|P|0|6 6 5 3 10 6
+Cavendish|SN|N|0|9 7 9 5 7 7
+Bellamy|SN|P|0|9 6 5 3 7 6
+Monkey D. Dragon|RV|N|1|8 9 9 10 9 8
+Sabo|RV|L|0|9 9 9 8 9 7
+Emporio Ivankov|RV|P|0|6 7 7 8 8 9
+Koala|RV|N|0|7 6 8 8 6 4
+Inazuma|RV|P|0|6 6 7 7 7 6
+Belo Betty|RV|P|0|6 6 6 8 6 6
+Morley|RV|P|0|4 9 5 5 9 10
+Karasu|RV|L|0|7 6 6 7 7 9
+Lindbergh|RV|N|0|7 6 9 10 5 3
+Rob Lucci|CP|Z|0|10 9 9 8 9 8
+Kaku|CP|Z|0|10 8 9 7 8 8
+Jabra|CP|Z|0|8 8 6 4 8 8
+Kalifa|CP|P|0|8 5 7 8 5 6
+Blueno|CP|P|0|6 9 6 6 9 9
+Stussy|CP|N|0|8 6 8 9 6 6
+Spandam|CP|N|0|3 2 3 4 3 5
+Magellan|CP|P|0|5 9 6 6 10 10
+Hannyabal|CP|N|0|5 6 5 3 6 7
+Dr. Vegapunk|CP|P|0|2 2 5 10 3 6
+Kozuki Oden|WA|N|1|8 10 10 7 10 9
+Kozuki Momonosuke|WA|Z|0|7 7 4 6 7 3
+Kin'emon|WA|P|0|7 8 9 7 8 8
+Denjiro|WA|N|0|7 8 9 8 8 9
+Kawamatsu|WA|N|0|5 9 8 6 9 9
+Raizo|WA|P|0|8 6 8 8 7 6
+Kikunojo|WA|N|0|8 7 9 6 7 7
+Yamato|WA|Z|0|8 9 9 6 9 9
+Inuarashi|WA|N|0|9 8 9 7 8 9
+Nekomamushi|WA|N|0|10 8 8 5 8 9
+Carrot|WA|N|0|10 6 7 5 5 3
+Pedro|WA|N|0|9 7 8 9 7 8
+Kyros|WA|N|0|9 9 10 7 9 7
+Rebecca|WA|N|0|9 5 8 6 6 5
+Nefertari Vivi|WA|N|0|6 4 6 9 5 5
+Dorry|WA|N|0|4 10 7 6 10 10
+Brogy|WA|N|0|4 10 7 6 10 10
+Hajrudin|WA|N|0|5 10 6 6 10 10
+`;
+const FAC = {SH:"Straw Hats",MA:"Marines",EM:"Great Pirate Crews",WL:"Warlords",SN:"Worst Generation",RV:"Revolutionaries",CP:"World Government",WA:"Wano & Allies"};
+const FRUIT = {P:"Paramecia",Z:"Zoan",L:"Logia",N:"No Devil Fruit"};
+const CHARS = RAW.trim().split("\n").map((l,i)=>{const [n,f,fr,lg,s]=l.split("|");const [spd,str,tec,iq,dur,size]=s.split(" ").map(Number);return {id:i,name:n,fac:f,fruit:fr,leg:lg==="1",spd,str,tec,iq,dur,size};});
+
+/* ---------- positions ---------- */
+const KIND = {
+  QB:{w:{iq:.4,tec:.35,spd:.1,dur:.1,str:.05},size:6},
+  RB:{w:{spd:.4,str:.2,dur:.25,tec:.15},size:5},
+  FB:{w:{str:.4,dur:.35,spd:.15,iq:.1},size:8},
+  SL:{w:{spd:.4,tec:.4,iq:.2},size:4},
+  WR:{w:{spd:.45,tec:.35,iq:.1,dur:.1},size:6},
+  TE:{w:{str:.3,tec:.25,dur:.2,spd:.15,iq:.1},size:8},
+  OL:{w:{str:.45,dur:.4,iq:.15},size:10},
+  ED:{w:{spd:.4,str:.4,dur:.2},size:8},
+  DT:{w:{str:.5,dur:.4,iq:.1},size:10},
+  LB:{w:{spd:.25,str:.25,iq:.3,dur:.2},size:7},
+  CB:{w:{spd:.5,tec:.3,iq:.2},size:5},
+  S:{w:{spd:.35,iq:.35,tec:.15,dur:.15},size:6}
+};
+function fit(c,kind){const k=KIND[kind];let v=0;for(const s in k.w)v+=k.w[s]*c[s];v*=10;const d=Math.abs(c.size-k.size);v-=Math.max(0,d-1)*3.5;return Math.max(15,Math.min(99,Math.round(v)));}
+
+const ROWH = 98, TOP = 22;
+function slots(def,off){
+  const S=[];const a=(id,label,kind,row,x,imp=1)=>S.push({id,label,kind,row,x,imp});
+  a("S1","FS","S",0,33);a("S2","SS","S",0,67);
+  a("CB1","CB","CB",1,9,1.5);a("CB2","CB","CB",1,91,1.5);
+  if(def==="43"){a("E1","DE","ED",2,18,1.5);a("D1","DT","DT",2,39);a("D2","DT","DT",2,61);a("E2","DE","ED",2,82,1.5);
+    a("L1","OLB","LB",1,30);a("L2","MLB","LB",1,50);a("L3","OLB","LB",1,70);}
+  else{a("E1","OLB","ED",2,10,1.5);a("D1","DE","DT",2,30);a("D2","NT","DT",2,50);a("D3","DE","DT",2,70);a("E2","OLB","ED",2,90,1.5);
+    a("L1","ILB","LB",1,37);a("L2","ILB","LB",1,63);}
+  [["LT",18],["LG",32],["C",46],["RG",60],["RT",74]].forEach(([id,x])=>a(id,id,"OL",3,x));
+  a("TE","TE","TE",3,89);a("WR1","WR","WR",4,9);a("WR2","WR","WR",4,91);a("QB","QB","QB",4,46,2);
+  if(off==="SL"){a("X","SLOT","SL",4,27);a("RB","RB","RB",5,46);}else{a("X","FB","FB",5,34);a("RB","RB","RB",5,58);}
+  return S;
+}
+
+const OPP = ["Loguetown Lanterns","Orange Town Clowns","Arlong Park Sawteeth","Alabasta Sandoras","Skypiea Thunder","Water 7 Shipwrights","Thriller Bark Shadows","Sabaody Bubblers","Impel Down Wardens","Fish-Man Island Tides","Punk Hazard Chill","Dressrosa Toys","Zou Elephants","Whole Cake Bakers","Wano Ronin","Egghead Labs","Laugh Tale Kings"].map((n,i)=>({n,p:350+i*35}));
+
+/* ---------- state ---------- */
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const st = {
+  mode:"build",
+  build: LS.get("op22.build",null) || {def:"43",off:"SL",leg:"on",facs:Object.keys(FAC),line:null},
+  chal: null,       // {mode, def, off, line, round, roll:{fac,fruit}, pick:id|null, rr:{fac,fruit}, skips, done, season}
+  stats: LS.get("op22.stats",{c170:{best:null,rec:null,runs:0},draft:{best:null,rec:null,runs:0}})
+};
+let sheetCtx=null, dragFrom=null;
+
+const $=id=>document.getElementById(id);
+function color(f){return f>=80?"var(--good)":f>=65?"var(--ok)":"var(--bad)"}
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,1800)}
+/* ---------- portraits ---------- */
+let PHOTOS = LS.get("op22.photos",{});   // { "Character Name": dataURL }
+function initials(n){const w=n.replace(/[^A-Za-z' ]/g," ").split(/\s+/).filter(x=>x&&!/^(D|of)$/.test(x));return ((w[0]||"?")[0]+(w.length>1?w[w.length-1][0]:(w[0]||"")[1]||"")).toUpperCase();}
+function avatar(c,size=""){
+  const img=PHOTOS[c.name];
+  return `<span class="av ${size} f-${c.fac} f${c.fruit}${c.leg?" leg":""}" aria-hidden="true">${img?`<img src="${img}" alt="">`:initials(c.name)}</span>`;
+}
+function savePhotos(){try{localStorage.setItem("op22.photos",JSON.stringify(PHOTOS));return true}catch(e){return false}}
+function shrink(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{
+  const s=Math.min(im.width,im.height);const sx=(im.width-s)/2;const sy=im.height>im.width?(im.height-s)*.12:0;
+  const cv=document.createElement("canvas");cv.width=cv.height=128;const g=cv.getContext("2d");g.drawImage(im,sx,sy,s,s,0,0,128,128);res(cv.toDataURL("image/jpeg",.82));};im.src=r.result;};r.readAsDataURL(file);});}
+const norm=s=>s.toLowerCase().replace(/\.[a-z0-9]+$/,"").replace(/[^a-z]/g,"");
+function matchFile(fname){const f=norm(fname);if(f.length<3)return null;
+  let hit=CHARS.find(c=>norm(c.name)===f);if(hit)return hit;
+  const parts=c=>c.name.toLowerCase().split(/[^a-z]+/).filter(p=>p.length>2);
+  hit=CHARS.filter(c=>norm(c.name).includes(f)||f.includes(norm(c.name))||parts(c).some(p=>p===f));
+  return hit.length===1?hit[0]:null;}
+let photoTarget=null;
+
+function rand(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ---------- team math ---------- */
+function teamScore(line,def,off){
+  const S=slots(def,off);let num=0,den=0;const fits=[];
+  for(const s of S){const c=line[s.id];const f=c==null?0:fit(CHARS[c],s.kind);fits.push(f);num+=f*s.imp;den+=s.imp;}
+  const mean=num/den;const weak=fits.slice().sort((a,b)=>a-b).slice(0,4);const wm=weak.reduce((a,b)=>a+b,0)/4;
+  const r=mean-.35*(mean-wm);
+  return Math.round(400+(r-55)*16);
+}
+function filled(line,def,off){return slots(def,off).every(s=>line[s.id]!=null)}
+
+/* ---------- builder ---------- */
+function buildPool(){const b=st.build;return CHARS.filter(c=>b.facs.includes(c.fac)&&(b.leg==="on"||!c.leg));}
+function defaultLine(){
+  const n=s=>CHARS.find(c=>c.name===s).id;
+  return {QB:n("Nico Robin"),RB:n("Monkey D. Luffy"),X:n("Sanji"),WR1:n("Nami"),WR2:n("Brook"),TE:n("Franky"),
+    LT:n("Jinbe"),LG:n("Urouge"),C:n("Trafalgar Law"),RG:n("Jozu"),RT:n("Bartholomew Kuma"),
+    E1:n("Rob Lucci"),D1:n("Kaido"),D2:n("Big Mom"),E2:n("Charlotte Katakuri"),
+    L1:n("Marco"),L2:n("Monkey D. Garp"),L3:n("Sabo"),CB1:n("Kizaru"),CB2:n("Carrot"),S1:n("Silvers Rayleigh"),S2:n("Benn Beckman")};
+}
+if(!st.build.line) st.build.line=defaultLine();
+function saveBuild(){LS.set("op22.build",st.build)}
+
+function reflow(line,def,off,prevDef,prevOff){
+  const now=slots(def,off).map(s=>s.id);const old=slots(prevDef,prevOff).map(s=>s.id);
+  const orphan=old.filter(id=>!now.includes(id)&&line[id]!=null).map(id=>line[id]);
+  old.forEach(id=>{if(!now.includes(id))delete line[id]});
+  for(const id of now){if(line[id]==null&&orphan.length)line[id]=orphan.shift();}
+}
+
+/* ---------- challenge ---------- */
+function newChal(mode){
+  const def=st.build.def, off=st.build.off;
+  st.chal={mode,def,off,line:{},round:1,roll:null,pick:null,rr:{fac:2,fruit:2},skips:3,season:null,bag:mode==="draft"?shuffle(CHARS.map(c=>c.id)):null};
+  roll();
+}
+function usedIds(line){return new Set(Object.values(line).filter(v=>v!=null))}
+function legCount(line){return Object.values(line).filter(v=>v!=null&&CHARS[v].leg).length}
+function chalPool(fac,fruit){
+  const c=st.chal;const used=usedIds(c.line);const legOk=legCount(c.line)<3;
+  return CHARS.filter(x=>!used.has(x.id)&&x.fac===fac&&x.fruit===fruit&&(legOk||!x.leg));
+}
+function roll(keep){
+  const c=st.chal;c.pick=null;
+  if(c.mode==="draft"){const used=usedIds(c.line);while(c.bag.length&&used.has(c.bag[0]))c.bag.shift();c.roll={char:c.bag.shift()};c.pick=c.roll.char;return;}
+  for(let i=0;i<200;i++){
+    const fac=keep==="fac"?c.roll.fac:rand(Object.keys(FAC));const fruit=keep==="fruit"?c.roll.fruit:rand(Object.keys(FRUIT));
+    if(c.roll&&keep&&fac===c.roll.fac&&fruit===c.roll.fruit)continue;
+    if(chalPool(fac,fruit).length){c.roll={fac,fruit};return;}
+  }
+  // fallback: any combination
+  for(const fac of shuffle(Object.keys(FAC)))for(const fruit of shuffle(Object.keys(FRUIT)))if(chalPool(fac,fruit).length){c.roll={fac,fruit};return;}
+}
+function place(slotId){
+  const c=st.chal;if(c.pick==null||c.line[slotId]!=null)return;
+  c.line[slotId]=c.pick;c.pick=null;c.round++;
+  if(c.round>22){c.roll=null;render();return;}
+  roll();render();
+}
+
+/* ---------- season ---------- */
+function playSeason(line,def,off,mode){
+  const P=teamScore(line,def,off);let w=0;const games=OPP.map(o=>{
+    const p=1/(1+Math.exp(-(P-o.p)/45));const win=Math.random()<p;
+    const hi=17+Math.floor(Math.random()*25), lo=Math.max(0,hi-3-Math.floor(Math.random()*21));
+    if(win)w++;return {o,win,us:win?hi:lo,them:win?lo:hi,p};
+  });
+  const res={P,w,l:17-w,games,line:{...line},def,off};
+  if(mode){const s=st.stats[mode];s.runs++;if(s.best==null||P>s.best)s.best=P;if(s.rec==null||w>s.rec)s.rec=w;LS.set("op22.stats",st.stats);}
+  return res;
+}
+
+/* ---------- render ---------- */
+function ctx(){if(st.mode==="build"){const b=st.build;return {line:b.line,def:b.def,off:b.off};}const c=st.chal;return {line:c.line,def:c.def,off:c.off};}
+
+function render(){
+  document.querySelectorAll(".modes button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===st.mode));
+  const blurbs={build:"Build your dream lineup from any faction. Tags show each character's fit for the spot, out of 99. Simulate a 17-game season whenever you like.",
+    c170:"Each round rolls a faction and a Devil Fruit type. Draft a matching character (up to 3 Legends) into any open spot, fill all 22, then play a 17-game season. Can you go 17–0?",
+    draft:"Each round rolls one random character from the whole series. Put them in any open spot (3 skips per run), fill all 22, then play the season."};
+  $("modeBlurb").textContent=blurbs[st.mode];
+  $("buildPanel").hidden=st.mode!=="build";$("chalPanel").hidden=st.mode==="build";
+  if(st.mode==="build")renderBuildPanel();else renderChalPanel();
+  renderField();renderUnder();renderResults();
+}
+
+function segSet(id,val){document.querySelectorAll("#"+id+" button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===val))}
+function renderBuildPanel(){
+  const b=st.build;segSet("segDef",b.def);segSet("segOff",b.off);segSet("segLeg",b.leg);
+  $("facChips").innerHTML=Object.entries(FAC).map(([k,v])=>`<button type="button" class="chip" data-fac="${k}" aria-pressed="${b.facs.includes(k)}">${v}</button>`).join("")+`<button type="button" class="chip" data-fac="ALL" aria-pressed="${b.facs.length===8}">All</button>`;
+  const full=filled(b.line,b.def,b.off);const P=teamScore(b.line,b.def,b.off);
+  const n=Object.values(b.line).filter(v=>v!=null).length;
+  $("buildBoard").innerHTML=`<div><small>Team score</small><span class="big">${full?P:"–"}</span></div><div><small>Roster</small><span class="big">${n}/22</span></div><div class="grow"><small>Vs. Laugh Tale (910)</small><span class="big">${full?Math.round(100/(1+Math.exp(-(P-910)/45)))+"%":"–"}</span></div>`;
+}
+function renderChalPanel(){
+  const c=st.chal, s=st.stats[c.mode];
+  $("chalBoard").innerHTML=`<div><small>Best score</small><span class="big">${s.best??"–"}</span></div><div><small>Best record</small><span class="big">${s.rec==null?"–":s.rec+"–"+(17-s.rec)}</span></div><div><small>Runs</small><span class="big">${s.runs}</span></div><div class="grow"><small>Legends used</small><span class="big">${c.mode==="c170"?legCount(c.line)+"/3":"–"}</span></div>`;
+  const rc=$("rollCard");
+  if(c.round>22){rc.innerHTML=`<div><div class="round">Roster full</div><div class="draw"><b>All 22 drafted</b></div></div><div class="acts"><button type="button" class="btn primary" id="seeRes">${c.season?"Replay season":"Play the season"}</button><button type="button" class="btn" id="newRun">New run</button></div>`;return;}
+  if(c.mode==="c170"){
+    const pk=c.pick!=null?CHARS[c.pick]:null;
+    rc.innerHTML=`<div><div class="round">Round ${c.round} of 22</div><div class="draw"><div><span>Faction</span><b>${FAC[c.roll.fac]}</b></div><div><span>Devil Fruit</span><b>${FRUIT[c.roll.fruit]}</b></div></div></div>
+    <div class="acts"><button type="button" class="btn" id="rrFac" ${c.rr.fac?"":"disabled"}>Reroll faction (${c.rr.fac})</button><button type="button" class="btn" id="rrFruit" ${c.rr.fruit?"":"disabled"}>Reroll fruit (${c.rr.fruit})</button><button type="button" class="btn primary" id="choose">${pk?"Change pick":"Choose a character"}</button></div>
+    <p class="hint">${pk?`<span class="drawn" style="display:inline-flex;vertical-align:middle;margin-right:6px">${avatar(pk,"md")}</span><b>${pk.name}</b> is ready. Tap an open spot on the field to place them; each spot shows their fit.`:"Pick from the matching characters, then tap an open spot."}</p>`;
+  }else{
+    const pk=CHARS[c.pick];
+    rc.innerHTML=`<div><div class="round">Round ${c.round} of 22</div><div class="draw"><div class="drawn">${avatar(pk,"lg")}<div><span>${FAC[pk.fac]} · ${FRUIT[pk.fruit]}${pk.leg?" · Legend":""}</span><b>${pk.name}</b></div></div></div></div>
+    <div class="acts"><button type="button" class="btn" id="skip" ${c.skips?"":"disabled"}>Skip (${c.skips} left)</button><button type="button" class="btn" id="newRun">New run</button></div>
+    <p class="hint">Tap an open spot to place them. Each open spot shows how well they'd fit.</p>`;
+  }
+}
+
+function renderField(){
+  const {line,def,off}=ctx();const S=slots(def,off);const f=$("field");
+  const placing=st.mode!=="build"&&st.chal.pick!=null&&st.chal.round<=22;
+  const pick=placing?CHARS[st.chal.pick]:null;
+  f.style.height=(TOP*2+ROWH*6)+"px";
+  let h=`<div class="side-tag" style="top:4px">Defense</div><div class="los" style="top:${TOP+ROWH*3-10}px"></div><div class="side-tag" style="top:${TOP+ROWH*3-4}px">Offense</div>`;
+  for(const s of S){
+    const id=line[s.id];const top=TOP+s.row*ROWH+(s.row>=3?4:-6);
+    if(id==null){
+      const prev=pick?`<span class="preview">${fit(pick,s.kind)}</span><span class="nm">Place here</span>`:`<span class="hole"></span><span class="nm">Empty</span>`;
+      const dis=st.mode!=="build"&&!placing;
+      h+=`<button type="button" class="tag empty${placing?" target":""}" style="left:${s.x}%;top:${top}px" data-slot="${s.id}" ${dis?"disabled":""} aria-label="${s.label} open spot"><span class="pos"><span>${s.label}</span></span>${prev}</button>`;
+    }else{
+      const c=CHARS[id];const ft=fit(c,s.kind);
+      h+=`<button type="button" class="tag" style="left:${s.x}%;top:${top}px" data-slot="${s.id}" draggable="${st.mode==="build"}" ${st.mode!=="build"?"disabled":""} aria-label="${s.label}: ${c.name}, fit ${ft}"><span class="pos"><span>${s.label}${c.leg?' <span class="leg">★</span>':""}</span><span class="fit" style="background:${color(ft)}">${ft}</span></span>${avatar(c)}<span class="nm">${c.name}</span></button>`;
+    }
+  }
+  f.innerHTML=h;
+}
+
+function renderUnder(){
+  const u=$("under");
+  if(st.mode==="build"){
+    const full=filled(st.build.line,st.build.def,st.build.off);
+    u.innerHTML=`<button type="button" class="btn primary" id="sim" ${full?"":"disabled"}>Simulate season</button><button type="button" class="btn" id="copy">Copy lineup</button><button type="button" class="btn" id="photos">Player photos</button><span class="spacer"></span><button type="button" class="btn" id="rand">Randomize</button><button type="button" class="btn" id="reset">Reset</button><button type="button" class="btn danger" id="clear">Clear all</button>`;
+  }else{
+    u.innerHTML=`<button type="button" class="btn" id="newRun2">New run</button><button type="button" class="btn" id="photos">Player photos</button><span class="spacer"></span><span class="lbl">Formation is set when a run starts (from Builder)</span>`;
+  }
+}
+
+let lastResult=null;
+function renderResults(){
+  const r=$("results");const res=st.mode==="build"?lastResult:st.chal.season;
+  if(!res){r.hidden=true;r.innerHTML="";return;}
+  r.hidden=false;
+  const S=slots(res.def,res.off);
+  const verdict=res.w===17?"Perfect season. King of the gridiron.":res.w>=14?"A Yonko-level team.":res.w>=10?"Playoff bound. The New World awaits.":res.w>=6?"Still sailing Paradise.":"Back to the East Blue.";
+  r.innerHTML=`<div class="row" style="align-items:flex-end;gap:10px 22px"><div><h2>Season results</h2><p class="blurb" style="margin-top:6px">${verdict}</p></div><div class="rec">${res.w}–${res.l}</div><div class="board" style="margin-left:auto"><div><small>Team score</small><span class="big">${res.P}</span></div></div></div>
+  <div class="games">${res.games.map((g,i)=>`<div class="game"><span class="wl ${g.win?"w":"l"}">${g.win?"W":"L"}</span><span class="op">${g.o.n}</span><span class="opp">${g.o.p}</span><span class="sc">${g.us}–${g.them}</span></div>`).join("")}</div>
+  <details><summary>Season details</summary><p>Fit for each spot, out of 99. The number beside each opponent is their team score.</p><div class="grades">${S.map(s=>{const c=CHARS[res.line[s.id]];const f=fit(c,s.kind);return `<div><em>${s.label}</em><b>${c.name}</b><span style="color:${color(f)}">${f}</span></div>`}).join("")}</div></details>
+  <div class="row"><button type="button" class="btn" id="shareRes">Copy results</button>${st.mode!=="build"?'<button type="button" class="btn primary" id="newRun3">New run</button>':'<button type="button" class="btn" id="sim2">Play again</button>'}</div>`;
+}
+
+/* ---------- picker sheet ---------- */
+function openSheet(c){sheetCtx=c;$("q").value="";$("sheetExtra").hidden=c.type!=="photos";$("scrim").hidden=false;drawList();setTimeout(()=>$("q").focus(),30);}
+function drawPhotos(q){
+  const n=Object.keys(PHOTOS).length;
+  $("sheetTitle").textContent="Player photos";$("sheetSub").textContent=`${n} of ${CHARS.length} players have a photo. Players without one show their faction badge.`;
+  let items=CHARS.slice().sort((a,b)=>a.name.localeCompare(b.name));if(q)items=items.filter(x=>x.name.toLowerCase().includes(q));
+  if(!items.length){$("list").innerHTML=`<div class="empty-list">No characters match that search.</div>`;return;}
+  $("list").innerHTML=items.map(x=>`<div class="prow">${avatar(x,"md")}<span class="who"><b>${x.name}</b><span>${FAC[x.fac]} · ${FRUIT[x.fruit]}</span></span><span class="acts"><button type="button" class="btn ph-up" data-name="${x.name}">${PHOTOS[x.name]?"Replace":"Upload"}</button>${PHOTOS[x.name]?`<button type="button" class="btn danger ph-rm" data-name="${x.name}">Remove</button>`:""}</span></div>`).join("");
+}
+function closeSheet(){$("scrim").hidden=true;sheetCtx=null;}
+function drawList(){
+  const q=$("q").value.trim().toLowerCase();const c=sheetCtx;let items,kind=null,onField=new Map();
+  if(c.type==="photos")return drawPhotos(q);
+  if(c.type==="build"){
+    const S=slots(st.build.def,st.build.off);const s=S.find(x=>x.id===c.slot);kind=s.kind;
+    Object.entries(st.build.line).forEach(([k,v])=>{if(v!=null)onField.set(v,S.find(x=>x.id===k)?.label||k)});
+    $("sheetTitle").textContent="Pick a "+s.label;$("sheetSub").textContent="Sorted by fit. Picking someone already on the field swaps the two.";
+    items=buildPool();
+  }else{
+    const ch=st.chal;$("sheetTitle").textContent="Choose a character";
+    $("sheetSub").textContent=`${FAC[ch.roll.fac]} · ${FRUIT[ch.roll.fruit]}${legCount(ch.line)>=3?" · Legend limit reached":""}`;
+    items=chalPool(ch.roll.fac,ch.roll.fruit);
+  }
+  if(q)items=items.filter(x=>x.name.toLowerCase().includes(q));
+  const S2=slots(ctx().def,ctx().off);
+  const openKinds=c.type==="chal"?S2.filter(s=>st.chal.line[s.id]==null):[];
+  const scoreOf=x=>kind?fit(x,kind):Math.max(...openKinds.map(s=>fit(x,s.kind)));
+  items=items.map(x=>({x,f:scoreOf(x)})).sort((a,b)=>b.f-a.f);
+  if(!items.length){$("list").innerHTML=`<div class="empty-list">No characters match. Try another search${c.type==="build"?" or turn on more factions":""}.</div>`;return;}
+  $("list").innerHTML=items.map(({x,f})=>`<button type="button" class="pick" data-id="${x.id}"><span class="score" style="background:${color(f)}">${f}</span>${avatar(x,"md")}<span class="who"><b>${x.name}${x.leg?' <span style="color:var(--red)">★</span>':""}</b><span>${FAC[x.fac]} · ${FRUIT[x.fruit]}</span></span><span class="meta">${onField.has(x.id)?`<span class="onf">On field · ${onField.get(x.id)}</span><br>`:""}<span class="stat">SPD ${x.spd} STR ${x.str} IQ ${x.iq}</span></span></button>`).join("")
+    + (c.type==="chal"?"":"");
+}
+$("q").addEventListener("input",drawList);
+function afterPhotos(msg){if(!savePhotos()){toast("This browser is out of photo space. Remove a few and try again.");PHOTOS=LS.get("op22.photos",{});}else toast(msg);if(sheetCtx)drawList();render();}
+$("fileOne").addEventListener("change",async e=>{const f=e.target.files[0];if(!f||!photoTarget)return;
+  try{PHOTOS[photoTarget]=await shrink(f);afterPhotos("Photo added for "+photoTarget);}catch(_){toast("That file couldn't be read as an image");}});
+$("bulkBtn").addEventListener("click",()=>{$("fileMany").value="";$("fileMany").click();});
+$("fileMany").addEventListener("change",async e=>{let ok=0,miss=[];
+  for(const f of e.target.files){const c=matchFile(f.name);if(!c){miss.push(f.name);continue;}try{PHOTOS[c.name]=await shrink(f);ok++;}catch(_){miss.push(f.name);}}
+  afterPhotos(`Matched ${ok} photo${ok===1?"":"s"}`+(miss.length?` · ${miss.length} unmatched (${miss.slice(0,3).join(", ")}${miss.length>3?"…":""})`:""));});
+$("sheetClose").addEventListener("click",closeSheet);
+$("scrim").addEventListener("click",e=>{if(e.target===$("scrim"))closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("scrim").hidden)closeSheet()});
+$("list").addEventListener("click",e=>{
+  const up=e.target.closest(".ph-up");if(up){photoTarget=up.dataset.name;$("fileOne").value="";$("fileOne").click();return;}
+  const rm=e.target.closest(".ph-rm");if(rm){delete PHOTOS[rm.dataset.name];savePhotos();drawList();render();toast("Photo removed");return;}
+  const b=e.target.closest(".pick");if(!b)return;const id=+b.dataset.id;const c=sheetCtx;
+  if(c.type==="build"){const line=st.build.line;const from=Object.keys(line).find(k=>line[k]===id);
+    if(from){line[from]=line[c.slot]??null;}line[c.slot]=id;saveBuild();lastResult=null;}
+  else{st.chal.pick=id;}
+  closeSheet();render();
+});
+
+/* ---------- events ---------- */
+document.querySelector(".modes").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;const m=b.dataset.mode;
+  if(m!=="build"&&(!st.chal||st.chal.mode!==m))newChal(m);
+  st.mode=m;render();
+});
+function onSeg(id,key){$(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const bd=st.build;const pd=bd.def,po=bd.off;bd[key]=b.dataset.v;
+  if(key!=="leg")reflow(bd.line,bd.def,bd.off,pd,po);lastResult=null;saveBuild();render();})}
+onSeg("segDef","def");onSeg("segOff","off");onSeg("segLeg","leg");
+$("facChips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const bd=st.build;const k=b.dataset.fac;
+  if(k==="ALL")bd.facs=Object.keys(FAC);else if(bd.facs.includes(k)){if(bd.facs.length>1)bd.facs=bd.facs.filter(x=>x!==k);}else bd.facs.push(k);
+  saveBuild();render();});
+
+$("field").addEventListener("click",e=>{
+  const t=e.target.closest(".tag");if(!t||t.disabled)return;const sid=t.dataset.slot;
+  if(st.mode==="build")openSheet({type:"build",slot:sid});else place(sid);
+});
+$("field").addEventListener("dragstart",e=>{const t=e.target.closest(".tag");if(!t)return;dragFrom=t.dataset.slot;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragFrom)}catch(_){}});
+$("field").addEventListener("dragover",e=>{const t=e.target.closest(".tag");if(t&&dragFrom){e.preventDefault();document.querySelectorAll(".dragover").forEach(x=>x.classList.remove("dragover"));t.classList.add("dragover");}});
+$("field").addEventListener("dragleave",e=>{const t=e.target.closest(".tag");if(t)t.classList.remove("dragover")});
+$("field").addEventListener("drop",e=>{e.preventDefault();const t=e.target.closest(".tag");if(!t||!dragFrom)return;const to=t.dataset.slot;const l=st.build.line;
+  [l[dragFrom],l[to]]=[l[to]??null,l[dragFrom]??null];dragFrom=null;lastResult=null;saveBuild();render();});
+$("field").addEventListener("dragend",()=>{dragFrom=null;document.querySelectorAll(".dragover").forEach(x=>x.classList.remove("dragover"))});
+
+async function copyText(t,msg){try{await navigator.clipboard.writeText(t);toast(msg)}catch(e){toast("Copy isn't available here")}}
+function lineupText(line,def,off){return slots(def,off).map(s=>`${s.label.padEnd(4)} ${line[s.id]!=null?CHARS[line[s.id]].name:"—"}`).join("\n")}
+
+document.addEventListener("click",e=>{
+  const id=e.target.id;
+  if(id==="sim"||id==="sim2"){const b=st.build;lastResult=playSeason(b.line,b.def,b.off,null);render();$("results").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
+  else if(id==="rand"){const b=st.build;const pool=shuffle(buildPool());const S=slots(b.def,b.off);if(pool.length<22){toast("Turn on more factions to fill 22 spots");return;}
+    b.line={};S.forEach((s,i)=>b.line[s.id]=pool[i].id);lastResult=null;saveBuild();render();}
+  else if(id==="reset"){st.build.line=defaultLine();reflow(st.build.line,st.build.def,st.build.off,"43","SL");lastResult=null;saveBuild();render();toast("Lineup reset")}
+  else if(id==="clear"){st.build.line={};lastResult=null;saveBuild();render();}
+  else if(id==="copy"){const b=st.build;copyText(`One Piece All-22 · team score ${filled(b.line,b.def,b.off)?teamScore(b.line,b.def,b.off):"–"}\n`+lineupText(b.line,b.def,b.off),"Lineup copied");}
+  else if(id==="rrFac"&&st.chal.rr.fac){st.chal.rr.fac--;roll("fruit");render();}
+  else if(id==="rrFruit"&&st.chal.rr.fruit){st.chal.rr.fruit--;roll("fac");render();}
+  else if(id==="choose"){openSheet({type:"chal"});}
+  else if(id==="photos"){openSheet({type:"photos"});}
+  else if(id==="skip"&&st.chal.skips){st.chal.skips--;roll();render();}
+  else if(id==="newRun"||id==="newRun2"||id==="newRun3"){newChal(st.mode);render();window.scrollTo({top:0});}
+  else if(id==="seeRes"){const c=st.chal;c.season=playSeason(c.line,c.def,c.off,c.mode);render();$("results").scrollIntoView({behavior:"smooth"});}
+  else if(id==="shareRes"){const res=st.mode==="build"?lastResult:st.chal.season;
+    copyText(`One Piece All-22 · ${st.mode==="c170"?"17–0 Challenge":st.mode==="draft"?"Grand Line Draft":"Builder"}\nWent ${res.w}–${res.l} · team score ${res.P}\n`+lineupText(res.line,res.def,res.off),"Results copied");}
+});
+
+render();
+</script>
+</body>
+</html>
